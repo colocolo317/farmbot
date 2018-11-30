@@ -11,6 +11,8 @@ config :farmbot_core, Elixir.Farmbot.AssetWorker.Farmbot.Asset.PinBinding,
   gpio_handler: Farmbot.PinBindingWorker.StubGPIOHandler,
   error_retry_time_ms: 30_000
 
+config :farmbot_core, Farmbot.Leds, gpio_handler: Farmbot.Leds.StubHandler
+
 # Customize non-Elixir parts of the firmware.  See
 # https://hexdocs.pm/nerves/advanced-configuration.html for details.
 config :nerves, :firmware,
@@ -28,7 +30,6 @@ config :farmbot_core,
 
 # Configure Farmbot Behaviours.
 config :farmbot_core, :behaviour,
-  leds_handler: Farmbot.Leds.StubHandler,
   celery_script_io_layer: Farmbot.OS.IOLayer,
   json_parser: Farmbot.JSON.JasonParser
 
