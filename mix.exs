@@ -22,7 +22,7 @@ defmodule Farmbot.Mixfile do
     [
       app: :farmbot,
       description: "The Brains of the Farmbot Project",
-      elixir: "~> 1.6",
+      elixir: "~> 1.8",
       package: package(),
       make_clean: ["clean"],
       make_env: make_env(),
@@ -36,13 +36,10 @@ defmodule Farmbot.Mixfile do
       archives: [nerves_bootstrap: "~> 1.2"],
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps_path: "deps/#{@target}",
-      build_path: "_build/#{@target}",
-      lockfile: "mix.lock.#{@target}",
       config_path: "config/config.exs",
       elixirc_paths: elixirc_paths(Mix.env(), @target),
       aliases: aliases(Mix.env(), @target),
-      deps: deps() ++ deps(@target),
+      deps: deps(),
       dialyzer: [
         plt_add_deps: :transitive,
         plt_add_apps: [:mix],
@@ -137,46 +134,32 @@ defmodule Farmbot.Mixfile do
       {:ring_logger, "~> 0.5"},
       {:bbmustache, "~> 1.6"},
       {:sqlite_ecto2, "~> 2.2"},
-      {:logger_backend_sqlite, "~> 2.1"}
-    ]
-  end
+      {:logger_backend_sqlite, "~> 2.1"},
 
-  defp deps("host") do
-    [
-      {:ex_doc, "~> 0.19", only: :dev},
-      {:excoveralls, "~> 0.10", only: :test},
-      {:dialyxir, "~> 1.0.0-rc.3", only: :dev, runtime: false},
-      {:credo, "~> 0.10", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.19", only: :dev, targets: [:host]},
+      {:excoveralls, "~> 0.10", only: :test, targets: [:host]},
+      {:dialyxir, "~> 1.0.0-rc.3", only: :dev, targets: [:host], runtime: false},
+      {:credo, "~> 0.10", only: [:dev, :test], targets: [:host], runtime: false},
       {:mock, "~> 0.3", only: :test},
-      {:faker, "~> 0.11", only: :test}
+      {:faker, "~> 0.11", only: :test},
+
+      {:nerves_runtime, "~> 0.8", targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_hub, github: "nerves-hub/nerves_hub", override: true, targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_firmware, "~> 0.4", targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_firmware_ssh, "~> 0.3", targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_init_gadget, "~> 0.5", only: :dev, targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_time, "~> 0.2", targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_network, "~> 0.3", targets: [:rpi, :rpi0, :rpi3]},
+      {:nerves_wpa_supplicant, "~> 0.3", targets: [:rpi, :rpi0, :rpi3]},
+      {:dhcp_server, "~> 0.6", targets: [:rpi, :rpi0, :rpi3]},
+      {:elixir_ale, "~> 1.1", targets: [:rpi, :rpi0, :rpi3]},
+      {:mdns, "~> 1.0", targets: [:rpi, :rpi0, :rpi3]},
+
+      {:farmbot_system_rpi3, "1.5.1-farmbot.1", targets: [:rpi3], runtime: false},
+      {:farmbot_system_rpi0, "1.5.1-farmbot.0", targets: [:rpi0],runtime: false},
+      {:farmbot_system_rpi, "1.5.1-farmbot.0", targets: [:rpi], runtime: false}
     ]
   end
-
-  defp deps(target) do
-    system(target) ++
-      [
-        {:nerves_runtime, "~> 0.8"},
-        {:nerves_hub, github: "nerves-hub/nerves_hub", override: true},
-        {:nerves_firmware, "~> 0.4"},
-        {:nerves_firmware_ssh, "~> 0.3"},
-        {:nerves_init_gadget, "~> 0.5", only: :dev},
-        {:nerves_time, "~> 0.2"},
-        {:nerves_network, "~> 0.3"},
-        {:nerves_wpa_supplicant, "~> 0.3"},
-        {:dhcp_server, "~> 0.6"},
-        {:elixir_ale, "~> 1.1"},
-        {:mdns, "~> 1.0"}
-      ]
-  end
-
-  defp system("rpi3"),
-    do: [{:farmbot_system_rpi3, "1.5.1-farmbot.1", runtime: false}]
-
-  defp system("rpi0"),
-    do: [{:farmbot_system_rpi0, "1.5.1-farmbot.0", runtime: false}]
-
-  defp system("rpi"),
-    do: [{:farmbot_system_rpi, "1.5.1-farmbot.0", runtime: false}]
 
   defp package do
     [
