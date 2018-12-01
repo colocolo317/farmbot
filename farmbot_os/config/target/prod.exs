@@ -14,9 +14,7 @@ config :farmbot_core, Elixir.Farmbot.AssetWorker.Farmbot.Asset.PinBinding,
 
 config :farmbot_core, Farmbot.Leds, gpio_handler: Farmbot.Target.Leds.CircuitsHandler
 
-config :farmbot_core, :behaviour,
-  celery_script_io_layer: Farmbot.OS.IOLayer,
-  json_parser: Farmbot.JSON.JasonParser
+config :farmbot_core, :behaviour, celery_script_io_layer: Farmbot.OS.IOLayer
 
 data_path = Path.join("/", "root")
 
