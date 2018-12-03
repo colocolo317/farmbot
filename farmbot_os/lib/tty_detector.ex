@@ -13,7 +13,7 @@ defmodule Farmbot.TTYDetector do
   end
 
   def init([]) do
-    {:ok, %{device: nil, needs_flash: true, open: false}, 0}
+    {:ok, %{device: nil, needs_flash: false, open: false}, 0}
   end
 
   def handle_info(:timeout, %{device: nil} = state) do
@@ -39,7 +39,22 @@ defmodule Farmbot.TTYDetector do
   end
 
   def handle_info(:timeout, %{device: device, needs_flash: false, open: false} = state) do
-    require IEx; IEx.pry
+    opts = [
+      device: device,
+      transport: Farmbot.Firmware.UARTTransport,
+      side_effects: Farmbot.Core.FirmwareSideEffects
+    ]
+    case Farmbot.Firmware.start_link(opts) do
+      {:ok, pid} -> 
+        Process.monitor(pid)
+        {:noreply, %{state | open: true}}
+      error -> 
+        {:stop, error, state}
+    end
+  end
+
+  def handle_info({:DOWN, _ref, :process, _pid, reason}, state) do
+    {:stop, reason, state}
   end
 
   def handle_continue([{name, _} | rest], %{device: nil} = state)
@@ -56,7 +71,7 @@ defmodule Farmbot.TTYDetector do
   end
 
   defp flash_fw(fw_file, state) do
-    args = ~w"-q -q -patmega2560 -cwiring -P/dev/#{state.device} -b115200 -D -V -Uflash:w:#{fw_file}:i"
+    args = ~w"-q -q -patmega2560 -cwiring -P#{dev(state.device)} -b115200 -D -V -Uflash:w:#{fw_file}:i"
     opts = [stderr_to_stdout: true, into: IO.stream(:stdio, :line)]
     res = System.cmd("avrdude", args, opts)
     case res do
@@ -66,4 +81,7 @@ defmodule Farmbot.TTYDetector do
         {:noreply, state, @error_ms}
     end
   end
+
+  defp dev("/dev/" <> _ = device), do: IO.inspect(device, label: "DEVICE")
+  defp dev("tty" <> _ = dev), do: IO.inspect(Path.join("/dev", dev), label: "DEVICE")
 end
